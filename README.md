@@ -11,5 +11,5 @@ This repository contains PostgreSQL and Matlab code to:
 4. test the optimal policy identified on the eICU-RI dataset
 5. computes the main results and key figures
 
-References:
+References for the sepsis-3 definition:
 Singer, JAMA 2016 http://jamanetwork.com/journals/jama/fullarticle/2492881
