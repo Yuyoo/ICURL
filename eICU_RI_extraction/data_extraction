@@ -1,5 +1,5 @@
 
-Demographics
+###############################    Demographics
 
 
 Create table public.eicu2demog as
@@ -30,9 +30,8 @@ on cohort.patientunitstayid=pt.patientunitstayid
 group by cohort.patientunitstayid
 );
 
-GCS
-
-From table nursecharting (largest source)
+###############################    GCS
+## From table nursecharting (largest source)
 
 Create table public.eicu2gcs1 as
 (
@@ -51,7 +50,7 @@ where nursingchartoffset between 0 and 4320
 group by patientunitstayid, bloc
 );
 
-From table physicalexam (2nd source, if NC is missing)
+## From table physicalexam (2nd source, if NC is missing)
 
 Create table public.eicu2gcs2 as
 (
@@ -74,14 +73,13 @@ group by patientunitstayid, bloc
 );
 
 
-Vital signs
+###############################    Vital signs
 
 For HR, SaO2, RR, main source of data is vitalperiodic. If missing, nursecharting is used.
 For blood pressure, main source is vitalaperiodic. If missing, nursecharting is used.
 
-From vitalperiodic
-
-[OMAR: this is not validated! Automatically recorded!! I may want to exclude abnormal values, e.g. zero HR due to fallen electrode – consider delete zeros, for example RR, MAP, HR !!!!]
+## From vitalperiodic
+## [Note: this is not validated! Automatically recorded!! I may want to exclude abnormal values, e.g. zero HR due to fallen electrode – consider deleting zeros, for example RR, MAP, HR !!!!]
 
 Create table public.eicu2vitals as
 (
@@ -96,9 +94,8 @@ where observationoffset between 0 and 4320
 group by pt.patientunitstayid, bloc
 );
 
-From nursecharting
-
-This occurs in several steps to speed up the process.
+## From nursecharting
+## This occurs in several steps to speed up the process.
 
 -- Step 1: extract raw values for vitals and BP
 
@@ -163,7 +160,7 @@ group by patientunitstayid, bloc
 );
 
 
-BP from vitalaperiodic
+###############################    BP from vitalaperiodic
 
 Create table public.eicu2bp as
 (
@@ -179,7 +176,7 @@ where observationoffset between 0 and 4320
 group by pt.patientunitstayid, bloc
 );
 
-Temperature
+###############################    Temperature
 
 Create table public.eicu2tempc as
 (
@@ -200,13 +197,10 @@ group by patientunitstayid,bloc
 );
 
 
+###############################    Labs
+## Real-time labs are used. If labs are missing on admission, pre-admission labs (up to 12h pre-admission) are used.
 
-
-Labs
-
-Real-time labs are used. If labs are missing on admission, pre-admission labs (up to 12h pre-admission) are used.
-
-Pre-admission
+## Pre-admission labs
 
 
 Create table public.eicu2prelabs as
@@ -222,7 +216,7 @@ group by pt.patientunitstayid
 );
 
 
-Real-time
+## Real-time labs
 
 
 Create table public.eicu2labs as
@@ -245,9 +239,8 @@ group by patientunitstayid, bloc
 );
 
 
-Mechanical ventilation
-
-From 3 sources, similar to what was done to compute SOFA score for cohort definition.
+###############################    Mechanical ventilation
+## From 3 sources, similar to what was done to compute SOFA score for cohort definition.
 
 
 Create table public.eicu2mechvent as
@@ -317,9 +310,8 @@ where mechvent=1
 );
 
 
-FiO2 from mechanical ventilation data
-
-Used as a second source, when FiO2 not available from ABG.
+###############################    FiO2 from mechanical ventilation data
+## Used as a second source, when FiO2 not available from ABG.
 
 Create table public.eicu2fio2mv as
 (
@@ -340,12 +332,10 @@ group by patientunitstayid, bloc
 
 );
 
-Fluid intake
+###############################    Fluid intake
+## I wanted to include all items that correspond to IV crystalloids, colloids and blood products (not medications, not dextrose). There are over 250,000 unique items in intakeoutput. I ranked them by frequency and created a list of regex to exclude non-suitable items, covering in frequency over 99% of all possible items.
 
-I wanted to include all items that correspond to IV crystalloids, colloids and blood products (not medications, not dextrose). There are over 250,000 unique items in intakeoutput. I ranked them by frequency and created a list of regex to exclude non-suitable items, covering in frequency over 99% of all possible items.
-
-
-List of all labels with count, from intakeoutput
+## Create list of all labels with count, from intakeoutput
 
 create table public.eicuiolabels as
 (
@@ -355,7 +345,7 @@ group by cellpath
 order by count desc
 );
 
-Removing wrong labels
+## Removing wrong labels
 
 create table public.eicuiogoodlabels as
 (
@@ -464,7 +454,7 @@ order by count desc
 )
 
 
-Preadmission fluid
+####################    Preadmission fluid
 
 create table public.eicu2preadio as
 (
@@ -494,7 +484,7 @@ group by patientunitstayid
 );
 
 
-Real-time fluid
+##############    Real-time fluid
 
 
 create table public.eicu2io as
@@ -533,7 +523,7 @@ group by patientunitstayid, bloc
 
 
 
-Vasopressors
+###############################    Vasopressors
 
 
 Create table public.eicu2vasoHIGH as
@@ -634,9 +624,8 @@ group by pt.patientunitstayid, pt.bloc
 );
 
 
-Combining everything
-
--- version 02/02/17
+###############################    Combining everything
+## version 02/02/17
 
 create table public.eicu2cohort as
 (
